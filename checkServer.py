@@ -71,7 +71,7 @@ def main():
         conn.getresponse()
 
         # print 'Failed to ping %s.  Sent email to %s.' % (hostname, receivers)
-        print('Failed to ping %s.  Sent pushover alert.' % (hostname))
+        print('Failed to ping %s. Sent pushover alert.' % (hostname))
 
     else:
         print('Successful ping response from %s.  It\'s alive!' % (hostname))

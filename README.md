@@ -37,7 +37,7 @@ usage: checkServer.py [-h] [-a ATTEMPTS] [-w WAIT] [-g]
                       host sender [recipients [recipients ...]]
 
 positional arguments:
-  host                  host name to verify
+  host                      host name to verify
   token 	            pushover application token
   user		            pushover user token
 

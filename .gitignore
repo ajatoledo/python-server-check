@@ -90,3 +90,6 @@ ENV/
 
 # config file
 config
+
+# jetbrains project
+.idea/

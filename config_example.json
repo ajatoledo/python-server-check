@@ -1,0 +1,6 @@
+{
+    "pushover": {
+        "token": "application_token",
+        "user": "user_token"
+    }
+}

@@ -25,7 +25,7 @@ script to send email to the appropriate people.  After modifications,
 just run using the Python interpreter. -->
 
 No need to build anything.  However, you will want to modify the
-script to read to a config file, or alternatively input user and app tokens each time teh script is run.  After modifications,
+script to read to a config file, or alternatively input user and app tokens each time the script is run.  After modifications,
 just run using the Python interpreter.
 
 ## Basic Usage
@@ -38,15 +38,16 @@ usage: checkServer.py [-h] [-a ATTEMPTS] [-w WAIT] [-g]
 
 positional arguments:
   host                      host name to verify
-  token 	            pushover application token
-  user		            pushover user token
 
 optional arguments:
+  -t, --token           pushover application token; needed for pushover alerts
+  -u, --user            pushover user token; needed for pushover alerts
   -h, --help            show this help message and exit
   -a ATTEMPTS, --attempts ATTEMPTS
                         max attempts
   -w WAIT, --wait WAIT  wait time in seconds (default: 20)
   -g, --wget            use wget instead of icmp ping
+  -v, --verbose         if provided, process is verbose as it pings
 ```
 
 As an example, invoking the script as

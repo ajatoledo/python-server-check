@@ -1,0 +1,31 @@
+#!/bin/bash
+
+# parse position arguments
+host_list=$1
+
+# check argument input; exit if empty
+if [ "$1" == "" ]; then
+    echo "no host list specified; consult host_list_example.csv for how to structure a list"
+    exit 1
+fi
+
+# check to see if specified files exists; exit if file not found
+if test -f "$host_list"; then
+   :
+else
+    echo "$host_list does not exist, reivew input"
+    exit 1
+fi
+
+
+# loop through hostnames and arguments from provided host list
+{
+    # read in a read will removes header row
+    read
+    while IFS=, read -r host arguments
+    do
+        # ping each website to determine if it is online
+        ../py/checkServer.py $host $arguments
+    done
+} < $host_list
+

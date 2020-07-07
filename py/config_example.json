@@ -1,0 +1,9 @@
+{
+    "setup": {
+        "steps": "after updating pushover below, rename file to config (no extension)"
+    },
+    "pushover": {
+        "token": "application_token",
+        "user": "user_token"
+    }
+}

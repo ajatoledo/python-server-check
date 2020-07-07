@@ -1,0 +1,3 @@
+host,arguments (input relevant arguments per host as you would if running individually)
+domain.com,-g
+test.com, -w 1 -v

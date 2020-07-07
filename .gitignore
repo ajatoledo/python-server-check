@@ -90,6 +90,14 @@ ENV/
 
 # config file
 config
+host.list
 
 # jetbrains project
 .idea/
+
+# mac
+*.DS_Store
+
+# junk
+archived/
+

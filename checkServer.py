@@ -1,5 +1,3 @@
-#!/usr/bin/env python
-
 # Author - Mark Royer
 
 import argparse
@@ -11,28 +9,43 @@ import http.client
 import urllib
 
 
-def ping(hostname, useWget):
-    print('Attempting to ping host %s...' % hostname)
+def ping(hostname, useWget, verbose):
+    if verbose:
+        print('Attempting to ping host %s...' % hostname)
+
     if useWget:
         # This option is if icmp is blocked
         return os.system('wget -nv -O - ' + hostname + ' > /dev/null 2>&1')
     else:
         # Send one packet and wait up to 10 seconds for a response
-        return os.system('ping -c 1 -W 10 ' + hostname + ' > /dev/null')
+        return os.system('ping -c 1 -W 10 ' + hostname + ' > /dev/null 2>&1')
 
 
 def main():
-    # read in config file
-    with open(os.path.join(sys.path[0], 'config')) as f:
-        data = json.load(f)
-
     parser = argparse.ArgumentParser()
+
+    # check for config file
+    try:
+
+        # read in config file
+        with open(os.path.join(sys.path[0], 'config')) as f:
+            data = json.load(f)
+
+        # reading default keys and user from config
+        parser.add_argument('-t', '--token', default=data['pushover']['token'], help='pushover application token')
+        parser.add_argument('-u', '--user', default=data['pushover']['user'], help='pushover user token')
+
+    except:
+
+        parser.print_help()
+        exit(-1)
+
+    # read config items
     parser.add_argument('host', help='host name to verify')
-    parser.add_argument('-t', '--token', default=data['pushover']['token'], help='pushover application token')
-    parser.add_argument('-u', '--user', default=data['pushover']['user'], help='pushover user token')
     parser.add_argument('-a', '--attempts', type=int, default=10, help='max attempts')
     parser.add_argument('-w', '--wait', type=int, default=20, help='wait time in seconds (default: 20)')
     parser.add_argument('-g', '--wget', action='store_true', help='use wget instead of icmp ping')
+    parser.add_argument('-v', '--verbose', action='store_true', help='verbose output response messages')
 
     try:
         args = parser.parse_args()
@@ -42,22 +55,28 @@ def main():
         maxAttempts = args.attempts
         waitTime = args.wait  # seconds
         useWget = args.wget
+        verbose = args.verbose
 
     except:
         parser.print_help()
         exit(-1)
 
-    response = ping(hostname, useWget)
+    response = ping(hostname, useWget, verbose=verbose)
     attempts = 1
 
     while response != 0 and attempts < maxAttempts:
-        print('Attempt %d to ping host %s failed. Trying again in %d seconds.' % (attempts, hostname, waitTime))
+        if verbose:
+            print('Attempt %d to ping host %s failed. Trying again in %d seconds.' % (attempts, hostname, waitTime))
+
         time.sleep(waitTime)
-        response = ping(hostname, useWget)
+        response = ping(hostname, useWget, verbose=verbose)
         attempts += 1
 
     if response != 0:
-        print('Attempt %d to ping host %s failed. Giving up and sending pushover alert.' % (attempts, hostname))
+        if verbose:
+            print('Attempt %d to ping host %s failed. Giving up and sending pushover alert.' % (attempts, hostname))
+
+        # message that will be passed to pushover alert
         msg = '%s failed to respond after %d ping attempts. Someone should probably investigate.' % (hostname, attempts)
 
         conn = http.client.HTTPSConnection('api.pushover.net:443')
@@ -73,7 +92,9 @@ def main():
         print('Failed to ping %s. Sent pushover alert.' % hostname)
 
     else:
-        print('Successful ping response from %s.  It\'s alive!' % hostname)
+
+        if verbose:
+            print('Successful ping response from %s.  It\'s alive!' % hostname)
 
 
 if __name__ == '__main__':

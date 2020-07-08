@@ -48,6 +48,7 @@ optional arguments:
   -w WAIT, --wait WAIT  wait time in seconds (default: 20)
   -g, --wget            use wget instead of icmp ping
   -v, --verbose         if provided, process is verbose as it pings
+  -ts, --timestamp      append timestamp to output, useful for logging
 ```
 
 As an example, invoking the script as

@@ -1,4 +1,5 @@
-# Author - Mark Royer
+# Author of original email work - Mark Royer
+# Updates applied - Alex Aguilar
 
 import argparse
 import os
@@ -48,7 +49,8 @@ def main():
     parser.add_argument('-w', '--wait', type=int, default=20, help='wait time in seconds (default: 20)')
     parser.add_argument('-g', '--wget', action='store_true', help='use wget instead of icmp ping')
     parser.add_argument('-v', '--verbose', action='store_true', help='verbose output response messages')
-    parser.add_argument('-ts', '--timestamp', action='store_true', help='add timestamp to output, useful for logging')
+    parser.add_argument('-ts', '--timestamp', action='store_true',
+                        help='append timestamp to output, useful for logging')
 
     try:
         args = parser.parse_args()

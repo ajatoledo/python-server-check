@@ -1,9 +1,15 @@
 {
     "setup": {
-        "steps": "after updating pushover below, rename file to config (no extension)"
+        "steps": "after updating pushover below, rename file to config (no extension)",
+        "pushover_setup": "visit https://pushover.net to setup account; there is a one-time $5 purchase required; update application_token and user_token information below",
+        "timezone_setup": "update timezone information below to matching TZ database name; https://en.wikipedia.org/wiki/List_of_tz_database_time_zones",
     },
     "pushover": {
+
         "token": "application_token",
         "user": "user_token"
+    },
+    "timestamp": {
+        "timezone": "America/Detroit"
     }
 }

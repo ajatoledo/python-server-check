@@ -7,6 +7,8 @@ import json
 import time
 import http.client
 import urllib
+import pytz
+from datetime import datetime
 
 
 def ping(hostname, useWget, verbose):
@@ -46,6 +48,7 @@ def main():
     parser.add_argument('-w', '--wait', type=int, default=20, help='wait time in seconds (default: 20)')
     parser.add_argument('-g', '--wget', action='store_true', help='use wget instead of icmp ping')
     parser.add_argument('-v', '--verbose', action='store_true', help='verbose output response messages')
+    parser.add_argument('-ts', '--timestamp', action='store_true', help='add timestamp to output, useful for logging')
 
     try:
         args = parser.parse_args()
@@ -56,17 +59,30 @@ def main():
         waitTime = args.wait  # seconds
         useWget = args.wget
         verbose = args.verbose
+        timestamp = args.timestamp
 
     except:
         parser.print_help()
         exit(-1)
+
+    # capture timezone if ts passed
+    if timestamp:
+        try:
+            timezone = pytz.timezone(data['timestamp']['timezone'])
+        except:
+            print('timezone information not provided in config file')
+            exit(-1)
 
     response = ping(hostname, useWget, verbose=verbose)
     attempts = 1
 
     while response != 0 and attempts < maxAttempts:
         if verbose:
-            print('Attempt %d to ping host %s failed. Trying again in %d seconds.' % (attempts, hostname, waitTime))
+            if timestamp:
+                print('%s Attempt %d to ping host %s failed. Trying again in %d seconds.' % (
+                    datetime.now(timezone).strftime("%Y-%m-%d, %H:%M:%S") + ' -', attempts, hostname, waitTime))
+            else:
+                print('Attempt %d to ping host %s failed. Trying again in %d seconds.' % (attempts, hostname, waitTime))
 
         time.sleep(waitTime)
         response = ping(hostname, useWget, verbose=verbose)
@@ -74,7 +90,11 @@ def main():
 
     if response != 0:
         if verbose:
-            print('Attempt %d to ping host %s failed. Giving up and sending pushover alert.' % (attempts, hostname))
+            if timestamp:
+                print('%s Attempt %d to ping host %s failed. Giving up and sending pushover alert.' % (
+                    datetime.now(timezone).strftime("%Y-%m-%d, %H:%M:%S") + ' -', attempts, hostname))
+            else:
+                print('Attempt %d to ping host %s failed. Giving up and sending pushover alert.' % (attempts, hostname))
 
         # message that will be passed to pushover alert
         msg = '%s failed to respond after %d ping attempts. Someone should probably investigate.' % (hostname, attempts)
@@ -87,14 +107,16 @@ def main():
                          'message': msg,
                      }), {'Content-type': 'application/x-www-form-urlencoded'})
         conn.getresponse()
-
-        # print 'Failed to ping %s.  Sent email to %s.' % (hostname, receivers)
-        print('Failed to ping %s. Sent pushover alert.' % hostname)
-
+        if timestamp:
+            print('%s Failed to ping %s.' % (datetime.now(timezone).strftime("%Y-%m-%d, %H:%M:%S") + ' -', hostname))
+        else:
+            print('Failed to ping %s.' % hostname)
     else:
-
-        if verbose:
-            print('Successful ping response from %s.  It\'s alive!' % hostname)
+        if timestamp:
+            print('%s Successful ping response from %s.' %
+                  (datetime.now(timezone).strftime("%Y-%m-%d, %H:%M:%S") + ' -', hostname))
+        else:
+            print('Successful ping response from %s.' % hostname)
 
 
 if __name__ == '__main__':

@@ -37,18 +37,17 @@ usage: checkServer.py [-h] [-a ATTEMPTS] [-w WAIT] [-g]
                       host sender [recipients [recipients ...]]
 
 positional arguments:
-  host                      host name to verify
+  host                host name to verify
 
 optional arguments:
-  -t, --token           pushover application token; needed for pushover alerts
-  -u, --user            pushover user token; needed for pushover alerts
-  -h, --help            show this help message and exit
-  -a ATTEMPTS, --attempts ATTEMPTS
-                        max attempts
-  -w WAIT, --wait WAIT  wait time in seconds (default: 20)
-  -g, --wget            use wget instead of icmp ping
-  -v, --verbose         if provided, process is verbose as it pings
-  -ts, --timestamp      append timestamp to output, useful for logging
+  -t, --token         pushover application token; needed for pushover alerts
+  -u, --user          pushover user token; needed for pushover alerts
+  -h, --help          show this help message and exit
+  -a, --attempts      max attempts
+  -w, --wait          wait time in seconds (default: 20)
+  -g, --wget          use wget instead of icmp ping
+  -v, --verbose       if provided, process is verbose as it pings
+  -ts, --timestamp    append timestamp to output, useful for logging
 ```
 
 As an example, invoking the script as

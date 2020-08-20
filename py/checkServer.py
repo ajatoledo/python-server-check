@@ -82,7 +82,7 @@ def main():
         if verbose:
             if timestamp:
                 print('%s Attempt %d to ping host %s failed. Trying again in %d seconds.' % (
-                    datetime.now(timezone).strftime("%Y-%m-%d, %H:%M:%S") + ' -', attempts, hostname, waitTime))
+                    datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S") + ' -', attempts, hostname, waitTime))
             else:
                 print('Attempt %d to ping host %s failed. Trying again in %d seconds.' % (attempts, hostname, waitTime))
 
@@ -94,7 +94,7 @@ def main():
         if verbose:
             if timestamp:
                 print('%s Attempt %d to ping host %s failed. Giving up and sending pushover alert.' % (
-                    datetime.now(timezone).strftime("%Y-%m-%d, %H:%M:%S") + ' -', attempts, hostname))
+                    datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S") + ' -', attempts, hostname))
             else:
                 print('Attempt %d to ping host %s failed. Giving up and sending pushover alert.' % (attempts, hostname))
 
@@ -110,15 +110,15 @@ def main():
                      }), {'Content-type': 'application/x-www-form-urlencoded'})
         conn.getresponse()
         if timestamp:
-            print('%s Failed to ping %s.' % (datetime.now(timezone).strftime("%Y-%m-%d, %H:%M:%S") + ' -', hostname))
+            print('%s Failed to ping %s' % (datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S") + ' -', hostname))
         else:
-            print('Failed to ping %s.' % hostname)
+            print('Failed to ping %s' % hostname)
     else:
         if timestamp:
-            print('%s Successful ping response from %s.' %
-                  (datetime.now(timezone).strftime("%Y-%m-%d, %H:%M:%S") + ' -', hostname))
+            print('%s Successful ping response %s' %
+                  (datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S") + ' -', hostname))
         else:
-            print('Successful ping response from %s.' % hostname)
+            print('Successful ping response %s' % hostname)
 
 
 if __name__ == '__main__':

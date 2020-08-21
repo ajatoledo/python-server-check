@@ -14,10 +14,10 @@ records = logCleaning(file=str(Path.home()) + '/host_output.log',
 # prepare database connection
 # read in the arguments needed for connection
 with open(str(Path.home()) + '/.ssh/apiKeys') as f:
-    apiItems = json.load(f)['logs']['hostPing']
+    serverPing = json.load(f)['mysql']
 
 # create simple namespace
-argsL = SimpleNamespace(**apiItems)
+argsL = SimpleNamespace(**serverPing)
 
 # loop through and create insert statement for each item in df
 for i, row in records.iterrows():

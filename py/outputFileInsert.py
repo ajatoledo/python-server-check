@@ -3,7 +3,7 @@
 # Updates applied - Alex Aguilar
 from types import SimpleNamespace
 import json
-from pathlib import Path
+import os
 import argparse
 from customFunctions import tupleSplit, insertIntoTable
 
@@ -33,11 +33,12 @@ def main():
         exit(-1)
 
     # read in config items - table, cols, etc.
-    with open(str(Path.home()) + '/.ssh/apiKeys') as f:
-        apiItems = json.load(f)['logs']['hostPing']
+    loc = os.path.dirname(os.path.realpath(__file__)) + '/config.json'
+    with open(loc) as f:
+        serverPing = json.load(f)['mysql']
 
     # create simple namespace
-    argsL = SimpleNamespace(**apiItems)
+    argsL = SimpleNamespace(**serverPing)
 
     with open(output) as fp:
         lines = [line.rstrip() for line in fp]

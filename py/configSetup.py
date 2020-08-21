@@ -3,11 +3,12 @@
 import json
 import requests
 import pytz
+import os
 
 
 def main():
     while True:
-        setup_select = input('Will you be setting up a mysql connection? Y/N')
+        setup_select = input('Will you be setting up a mysql connection? Y/N ')
         if 1 <= len(setup_select) < 4:
             if setup_select[0].upper() in ['Y', 'N']:
                 # prep selection value for case
@@ -21,7 +22,7 @@ def main():
     user = input('Enter pushover user key: ')
     pushover = {'token': token, 'user': user}
 
-    testPO = input('Would you like to test pushover? Y/N')
+    testPO = input('Would you like to test pushover? Y/N ')
     if testPO[0].upper() == 'Y':
         print('Running pushover test...')
         test = pushover.copy()
@@ -35,14 +36,15 @@ def main():
             print('')
             raise Exception(
                 'Pushover response status was: {0}, indicating the pushover '
-                'request was not successful; exiting setup now. \nReview pushover '
-                'settings and restart setup process.'.format(
+                'request was not successful; exiting setup now. '
+                '\nReview pushover settings and restart setup process.'.format(
                     out.status_code))
         else:
             print(
                 'Pushover returned OK status, check your device for a pushover '
-                'notification; if you don\'t see a notification, check the pushover'
-                'application settings and re-run setup if needed..')
+                'notification; if you don\'t see a notification, '
+                'check the pushover application settings and '
+                're-run setup if needed..')
 
     else:
         print('Pushover test was not conducted; if you answered N by accident, '
@@ -84,8 +86,11 @@ def main():
     elif setup_select == 'N':
         config = {'pushover': pushover, 'timestamp': timestamp}
 
+    # create file path to write file in current directory
+    loc = os.path.dirname(os.path.realpath(__file__)) + '/config.json'
+
     # write config file to disk
-    with open('py/config.json', 'w') as f:
+    with open(loc, 'w') as f:
         json.dump(config, f)
 
 

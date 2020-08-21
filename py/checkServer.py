@@ -5,7 +5,6 @@
 
 import argparse
 import os
-import sys
 import json
 import time
 import http.client
@@ -33,7 +32,8 @@ def main():
     try:
 
         # read in config file
-        with open(os.path.join(sys.path[0], 'config.json')) as f:
+        loc = os.path.dirname(os.path.realpath(__file__)) + '/config.json'
+        with open(loc) as f:
             data = json.load(f)
 
         # reading default keys and user from config

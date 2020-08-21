@@ -1,50 +1,10 @@
-import mysql.connector
+#!/usr/bin/env python
+
+# Updates applied - Alex Aguilar
 from types import SimpleNamespace
 import json
 from pathlib import Path
-
-
-def logCleaning(file, replaceChar=' ', colIndex=None, colNames=None):
-    # import libraries needed below
-    import pandas as pd
-    from pathlib import Path
-
-    # evaluate whether file exists
-    try:
-        # check whether provided path exists
-        Path(file).exists()
-
-        # if passes, then open file
-        with open(file) as fp:
-            lines = fp.readlines()
-
-        # replace new line string
-        lines = [sub.replace('\n', '') for sub in lines]
-
-        # convert lines to df
-        df = pd.DataFrame(lines)
-
-        # split string by provided character
-        df = df[0].str.split(replaceChar, expand=True)
-
-        # determine whether a subset of columns should be kept based on index
-        if colIndex is None:
-            pass
-        else:
-            df = df[df.columns[colIndex]]
-
-        # if name list provided; apply names to columns
-        if colNames is None:
-            pass
-        else:
-            df.columns = colNames
-
-    # raise error if file not found
-    except:
-        raise Exception('%s not found' % file)
-
-    return df
-
+from customFunctions import logCleaning, insertIntoTable
 
 # prepare data for upload
 records = logCleaning(file=str(Path.home()) + '/host_output.log',
@@ -59,33 +19,19 @@ with open(str(Path.home()) + '/.ssh/apiKeys') as f:
 # create simple namespace
 argsL = SimpleNamespace(**apiItems)
 
-# create connection string
-conn = mysql.connector.connect(user=argsL.user, password=argsL.password,
-                               host=argsL.host, database=argsL.database)
+# loop through and create insert statement for each item in df
+for i, row in records.iterrows():
 
-# create cursor
-cnx = conn.cursor()
+    # submit to table
+    insertIntoTable(record=tuple(row), user=argsL.user, password=argsL.password,
+                    host=argsL.host, db=argsL.database, table=argsL.table,
+                    cols=argsL.columns)
 
-# create insert statement
-insert_stmt = ("INSERT INTO " + argsL.table + argsL.columns +
-               "VALUES (%s, %s, %s, %s) ")
-
-try:
-    # loop through and create insert statement for each item in df
-    for i, row in records.iterrows():
-        cnx.execute(insert_stmt, tuple(row))
-
-        # print update to console
-        print(str(i + 1) + ' records written')
-
-    # commit changes in the database
-    conn.commit()
-
-except:
-
-    # roll back in case of error
-    cnx.rollback()
-    raise Exception('unable to insert to %s' % argsL.table)
-
-# close connection to server
-cnx.close()
+    # print update to console
+    if (i + 1) is 1:
+        print('Status update: 1 record written; last record '
+              'written for hostname: {0}'.format(tuple(row)[-1]))
+    else:
+        print('Status update: ' + str(
+            i + 1) + ' records written; last record '
+                     'written for hostname: {0}'.format(tuple(row)[-1]))

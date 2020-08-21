@@ -1,3 +1,5 @@
+#!/usr/bin/env python
+
 # Author of original email work - Mark Royer
 # Updates applied - Alex Aguilar
 
@@ -31,12 +33,14 @@ def main():
     try:
 
         # read in config file
-        with open(os.path.join(sys.path[0], 'config')) as f:
+        with open(os.path.join(sys.path[0], 'config.json')) as f:
             data = json.load(f)
 
         # reading default keys and user from config
-        parser.add_argument('-t', '--token', default=data['pushover']['token'], help='pushover application token')
-        parser.add_argument('-u', '--user', default=data['pushover']['user'], help='pushover user token')
+        parser.add_argument('-t', '--token', default=data['pushover']['token'],
+                            help='pushover application token')
+        parser.add_argument('-u', '--user', default=data['pushover']['user'],
+                            help='pushover user token')
 
     except:
 
@@ -45,10 +49,14 @@ def main():
 
     # read config items
     parser.add_argument('host', help='host name to verify')
-    parser.add_argument('-a', '--attempts', type=int, default=10, help='max attempts')
-    parser.add_argument('-w', '--wait', type=int, default=20, help='wait time in seconds (default: 20)')
-    parser.add_argument('-g', '--wget', action='store_true', help='use wget instead of icmp ping')
-    parser.add_argument('-v', '--verbose', action='store_true', help='verbose output response messages')
+    parser.add_argument('-a', '--attempts', type=int, default=10,
+                        help='max attempts')
+    parser.add_argument('-w', '--wait', type=int, default=20,
+                        help='wait time in seconds (default: 20)')
+    parser.add_argument('-g', '--wget', action='store_true',
+                        help='use wget instead of icmp ping')
+    parser.add_argument('-v', '--verbose', action='store_true',
+                        help='verbose output response messages')
     parser.add_argument('-ts', '--timestamp', action='store_true',
                         help='append timestamp to output, useful for logging')
 
@@ -81,10 +89,17 @@ def main():
     while response != 0 and attempts < maxAttempts:
         if verbose:
             if timestamp:
-                print('%s Attempt %d to ping host %s failed. Trying again in %d seconds.' % (
-                    datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S") + ' -', attempts, hostname, waitTime))
+                print(
+                    '%s Attempt %d to ping host %s failed. '
+                    'Trying again in %d seconds.' % (
+                        datetime.now(timezone).strftime(
+                            "%Y-%m-%d %H:%M:%S") + ' -', attempts, hostname,
+                        waitTime))
             else:
-                print('Attempt %d to ping host %s failed. Trying again in %d seconds.' % (attempts, hostname, waitTime))
+                print(
+                    'Attempt %d to ping host %s failed. '
+                    'Trying again in %d seconds.' % (
+                        attempts, hostname, waitTime))
 
         time.sleep(waitTime)
         response = ping(hostname, useWget, verbose=verbose)
@@ -93,13 +108,21 @@ def main():
     if response != 0:
         if verbose:
             if timestamp:
-                print('%s Attempt %d to ping host %s failed. Giving up and sending pushover alert.' % (
-                    datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S") + ' -', attempts, hostname))
+                print(
+                    '%s Attempt %d to ping host %s failed. '
+                    'Giving up and sending pushover alert.' % (
+                        datetime.now(timezone).strftime(
+                            "%Y-%m-%d %H:%M:%S") + ' -', attempts, hostname))
             else:
-                print('Attempt %d to ping host %s failed. Giving up and sending pushover alert.' % (attempts, hostname))
+                print(
+                    'Attempt %d to ping host %s failed. '
+                    'Giving up and sending pushover alert.' % (
+                        attempts, hostname))
 
         # message that will be passed to pushover alert
-        msg = '%s failed to respond after %d ping attempts. Someone should probably investigate.' % (hostname, attempts)
+        msg = ('%s failed to respond after %d ping attempts. '
+               'Someone should probably investigate.' % (
+                   hostname, attempts))
 
         conn = http.client.HTTPSConnection('api.pushover.net:443')
         conn.request('POST', '/1/messages.json',
@@ -110,13 +133,16 @@ def main():
                      }), {'Content-type': 'application/x-www-form-urlencoded'})
         conn.getresponse()
         if timestamp:
-            print('%s Failed to ping %s' % (datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S") + ' -', hostname))
+            print('%s Failed to ping %s' % (
+                datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S") + ' -',
+                hostname))
         else:
             print('Failed to ping %s' % hostname)
     else:
         if timestamp:
             print('%s Successful ping response %s' %
-                  (datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S") + ' -', hostname))
+                  (datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S") + ' -',
+                   hostname))
         else:
             print('Successful ping response %s' % hostname)
 

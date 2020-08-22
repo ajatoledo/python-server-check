@@ -138,3 +138,29 @@ def pushoverRequest(token,
         raise Exception(
             'Pushover response status was: {0}, indicating the pushover '
             'request was not successful.'.format(urlPush.status_code))
+
+
+def sendGmail(gmailSender, gmailPassword, receiver, message, port=None):
+    import smtplib
+    import ssl
+
+    if port is None:
+        port = 465
+    else:
+        pass
+
+    # create a secure SSL context
+    context = ssl.create_default_context()
+
+    # try submitting email, if not successful, print to console
+    try:
+        with smtplib.SMTP_SSL('smtp.gmail.com', port,
+                              context=context) as server:
+            server.login(gmailSender, gmailPassword)
+            server.sendmail(gmailSender, receiver, message)
+
+        print('E-mail sent to {0}'.format(receiver))
+
+    except:
+
+        print('E-mail not sent to {0}'.format(receiver))

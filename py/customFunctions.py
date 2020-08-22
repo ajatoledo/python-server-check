@@ -83,3 +83,58 @@ def logCleaning(file, replaceChar=' ', colIndex=None, colNames=None):
         raise Exception('%s not found' % file)
 
     return df
+
+
+def pushoverRequest(token,
+                    user,
+                    message=None,
+                    attachment=None,
+                    device=None,
+                    title=None,
+                    url=None,
+                    url_title=None,
+                    priority=None,
+                    sound=None,
+                    timestamp=None, verbose=False):
+    import requests
+
+    # capture input arguments as dict
+    pushover_args = {
+        'token': token,
+        'user': user,
+        'message': message,
+        'attachment': attachment,
+        'device': device,
+        'title': title,
+        'url': url,
+        'url_title': url_title,
+        'priority': priority,
+        'sound': sound,
+        'timestamp': timestamp
+    }
+
+    # create updated dict to include non-None items
+    pushover_args = {k: v for k, v in pushover_args.items() if v is not None}
+
+    # create post url
+    urlPush = requests.post(
+        'https://api.pushover.net/1/messages.json',
+        data=pushover_args,
+        headers={'User-Agent': 'Python'})
+
+    # raise exception if response was not successful
+    if urlPush.status_code == 200:
+
+        if verbose:
+            print(
+                'Pushover returned OK status, check your device '
+                'for a pushover notification; if you do not see '
+                'a notification, check the pushover application settings.')
+
+            # return post response
+            return urlPush
+
+    if urlPush.status_code != 200:
+        raise Exception(
+            'Pushover response status was: {0}, indicating the pushover '
+            'request was not successful.'.format(urlPush.status_code))

@@ -140,27 +140,49 @@ def pushoverRequest(token,
             'request was not successful.'.format(urlPush.status_code))
 
 
-def sendGmail(gmailSender, gmailPassword, receiver, message, port=None):
+def sendMailPlain(mailSender, mailPassword, receiver: list, message,
+                  smtpServer=None,
+                  port=None, subject=None, verbose: bool = False):
     import smtplib
     import ssl
-
+    from email.mime.text import MIMEText
     if port is None:
         port = 465
     else:
         pass
+
+    if smtpServer is None:
+        smtpServer = 'smtp.gmail.com'
+
+    # sends a plain text message
+    msg = MIMEText(message)
+    msg['Subject'] = subject
+    msg['From'] = mailSender
+    msg['To'] = ', '.join(receiver)
 
     # create a secure SSL context
     context = ssl.create_default_context()
 
     # try submitting email, if not successful, print to console
     try:
-        with smtplib.SMTP_SSL('smtp.gmail.com', port,
+        with smtplib.SMTP_SSL(smtpServer, port,
                               context=context) as server:
-            server.login(gmailSender, gmailPassword)
-            server.sendmail(gmailSender, receiver, message)
+            server.login(mailSender, mailPassword)
+            server.sendmail(mailSender, receiver, msg.as_string())
 
-        print('E-mail sent to {0}'.format(receiver))
+            # output result if verbose is set
+            if verbose:
+
+                if len(receiver) > 1:
+                    print('E-mails sent to {0}.'.format(', '.join(receiver)))
+
+                else:
+                    print('E-mail sent to {0}.'.format(', '.join(receiver)))
 
     except:
-
-        print('E-mail not sent to {0}'.format(receiver))
+        # output result if verbose is set
+        if verbose:
+            if len(receiver) > 1:
+                print('E-mails not sent to {0}.'.format(', '.join(receiver)))
+            else:
+                print('E-mail not sent to {0}.'.format(', '.join(receiver)))

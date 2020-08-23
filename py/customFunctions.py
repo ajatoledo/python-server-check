@@ -140,19 +140,16 @@ def pushoverRequest(token,
             'request was not successful.'.format(urlPush.status_code))
 
 
-def sendMailPlain(mailSender, mailPassword, receiver: list, message,
-                  smtpServer=None,
-                  port=None, subject=None, verbose: bool = False):
+def sendMailPlain(mailSender, mailPassword, receiver: list, message: str,
+                  smtpServer: str = 'smtp.gmail.com',
+                  port: int = 465, subject=None, verbose: bool = False):
     import smtplib
     import ssl
     from email.mime.text import MIMEText
-    if port is None:
-        port = 465
+    if subject is None:
+        subject = 'no subject specified'
     else:
         pass
-
-    if smtpServer is None:
-        smtpServer = 'smtp.gmail.com'
 
     # sends a plain text message
     msg = MIMEText(message)
@@ -186,3 +183,17 @@ def sendMailPlain(mailSender, mailPassword, receiver: list, message,
                 print('E-mails not sent to {0}.'.format(', '.join(receiver)))
             else:
                 print('E-mail not sent to {0}.'.format(', '.join(receiver)))
+
+
+def ping(hostname: str, useWget: bool = False, verbose: bool = False):
+    import os
+
+    if verbose:
+        print('Attempting to ping host {0}...'.format(hostname))
+
+    if useWget:
+        # This option is if icmp is blocked
+        return os.system('wget -nv -O - ' + hostname + ' > /dev/null 2>&1')
+    else:
+        # Send one packet and wait up to 10 seconds for a response
+        return os.system('ping -c 1 -W 10 ' + hostname + ' > /dev/null 2>&1')

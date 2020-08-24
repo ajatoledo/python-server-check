@@ -1,15 +1,37 @@
 {
-    "setup": {
-        "steps": "after updating pushover below, rename file to config (no extension)",
-        "pushover_setup": "visit https://pushover.net to setup account; there is a one-time $5 purchase required; update application_token and user_token information below",
-        "timezone_setup": "update timezone information below to matching TZ database name; https://en.wikipedia.org/wiki/List_of_tz_database_time_zones",
+    "descriptions": {
+        "setup_script": "the items below outline information needed for each configuration that can be manually adjusted; however, there is a",
+        "setup_instructions": {
+            "config": "after updating pushover below, rename file to config (no extension)",
+            "timezone": "update timezone information below to matching TZ database name; https://en.wikipedia.org/wiki/List_of_tz_database_time_zones.",
+            "pushover": "visit https://pushover.net to setup account; there is a one-time $5 purchase required; update application_token and user_token information below; if you would like additional argmuents outlined in https://pushover.net/api, add the additional arguments below.",
+            "email": "uses smtp to send plaintext emails, update the items below; if using 2fa, will likely need to use an app password. the process for gmail can be found here: https://support.google.com/accounts/answer/185833?hl=en",
+            "mysql": "update the mysql information below; note this setup presumes that a mysql database with appropriate permissions has been setup already"
+        }
     },
-    "pushover": {
+    "config_items": {
+        "timestamp": {
+            "timezone": "America/Detroit"
+        },
+        "email": {
+            "sender": "user@test.com",
+            "password": "this_is_a_password",
+            "receiver": "receiver@test.com",
+            "smtpServer": "smtp.test.com",
+            "smtpPort": 465
+        },
+        "pushover": {
 
-        "token": "application_token",
-        "user": "user_token"
-    },
-    "timestamp": {
-        "timezone": "America/Detroit"
+            "token": "application_token",
+            "user": "user_token"
+        },
+        "mysql": {
+            "user": "username",
+            "password": "password",
+            "host": "mysql.example.com",
+            "database": "database_name",
+            "table": "table_in_database",
+            "columns": "(my_columns)"
+        }
     }
 }

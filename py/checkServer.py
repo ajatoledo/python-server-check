@@ -6,49 +6,42 @@
 import argparse
 import os
 import json
+from types import SimpleNamespace
 import time
-import http.client
-import urllib
 import pytz
 from datetime import datetime
-
-
-def ping(hostname, useWget, verbose):
-    if verbose:
-        print('Attempting to ping host %s...' % hostname)
-
-    if useWget:
-        # This option is if icmp is blocked
-        return os.system('wget -nv -O - ' + hostname + ' > /dev/null 2>&1')
-    else:
-        # Send one packet and wait up to 10 seconds for a response
-        return os.system('ping -c 1 -W 10 ' + hostname + ' > /dev/null 2>&1')
+from customFunctions import ping, pushoverRequest, sendMailPlain
 
 
 def main():
+    # create parser object
     parser = argparse.ArgumentParser()
 
     # check for config file
     try:
 
-        # read in config file
+        # read in config items - table, cols, etc.
         loc = os.path.dirname(os.path.realpath(__file__)) + '/config.json'
         with open(loc) as f:
-            data = json.load(f)
+            serverPing = json.load(f)
 
-        # reading default keys and user from config
-        parser.add_argument('-t', '--token', default=data['pushover']['token'],
-                            help='pushover application token')
-        parser.add_argument('-u', '--user', default=data['pushover']['user'],
-                            help='pushover user token')
+        # create simple namespace
+        argsL = SimpleNamespace(**serverPing)
 
     except:
-
         parser.print_help()
-        exit(-1)
+        raise Exception(
+            'Config.json not found; confirm it has been created.\n'
+            'Run configSetup.py if config.json hasn\'t been created')
 
     # read config items
-    parser.add_argument('host', help='host name to verify')
+    parser.add_argument('host', type=str, help='host name to verify')
+    parser.add_argument('-em', '--email', action='store_true',
+                        help='if passed, sends e-mail using '
+                             'config file credentials')
+    parser.add_argument('-po', '--pushover', action='store_true',
+                        help='if passed, sends pushover request using '
+                             'config file credentials')
     parser.add_argument('-a', '--attempts', type=int, default=10,
                         help='max attempts')
     parser.add_argument('-w', '--wait', type=int, default=20,
@@ -63,88 +56,105 @@ def main():
     try:
         args = parser.parse_args()
         hostname = args.host
-        token = args.token
-        user = args.user
         maxAttempts = args.attempts
         waitTime = args.wait  # seconds
         useWget = args.wget
         verbose = args.verbose
+        email = args.email
+        pushover = args.pushover
         timestamp = args.timestamp
 
     except:
         parser.print_help()
         exit(-1)
 
-    # capture timezone if ts passed
+    # capture timezone if it's passed
     if timestamp:
         try:
-            timezone = pytz.timezone(data['timestamp']['timezone'])
+            timezone = pytz.timezone(argsL.timestamp['timezone'])
         except:
-            print('timezone information not provided in config file')
-            exit(-1)
+            raise Exception(
+                'timezone not found, confirm it has been '
+                'configured in config.json.')
 
-    response = ping(hostname, useWget, verbose=verbose)
+    # ping hostname
+    response = ping(hostname=hostname, useWget=useWget, verbose=verbose)
+
+    # create counter for while loop
     attempts = 1
 
+    # if initial ping is unsuccessful, begin while loop and increment until max
     while response != 0 and attempts < maxAttempts:
         if verbose:
             if timestamp:
                 print(
-                    '%s Attempt %d to ping host %s failed. '
-                    'Trying again in %d seconds.' % (
+                    '{0} Attempt {1} to ping host {2} failed. '
+                    'Trying again in {3} seconds.' .format(
                         datetime.now(timezone).strftime(
                             "%Y-%m-%d %H:%M:%S") + ' -', attempts, hostname,
                         waitTime))
             else:
                 print(
-                    'Attempt %d to ping host %s failed. '
-                    'Trying again in %d seconds.' % (
+                    'Attempt {0} to ping host {1} failed. '
+                    'Trying again in {2} seconds.' .format(
                         attempts, hostname, waitTime))
 
+        # sleep script before attempting ping again
         time.sleep(waitTime)
-        response = ping(hostname, useWget, verbose=verbose)
+
+        # attempt ping again
+        response = ping(hostname=hostname, useWget=useWget, verbose=verbose)
+
+        # increment attempt count by 1
         attempts += 1
 
+    # if while loop breaks, proceed to notification
     if response != 0:
         if verbose:
             if timestamp:
-                print(
-                    '%s Attempt %d to ping host %s failed. '
-                    'Giving up and sending pushover alert.' % (
-                        datetime.now(timezone).strftime(
-                            "%Y-%m-%d %H:%M:%S") + ' -', attempts, hostname))
+                print('{0} Attempt {1} to ping host {2} failed. '
+                      'Giving up and sending notification.'
+                      .format(
+                        datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S")
+                        + ' -', attempts, hostname))
             else:
                 print(
-                    'Attempt %d to ping host %s failed. '
-                    'Giving up and sending pushover alert.' % (
+                    'Attempt {0} to ping host {1} failed. '
+                    'Giving up and sending notification.'.format(
                         attempts, hostname))
 
-        # message that will be passed to pushover alert
-        msg = ('%s failed to respond after %d ping attempts. '
-               'Someone should probably investigate.' % (
-                   hostname, attempts))
+        # message that will be passed to notification
+        msg = ('{0} failed to respond after {1} ping attempts. '
+               'Someone should probably investigate.'
+               .format(hostname, attempts))
 
-        conn = http.client.HTTPSConnection('api.pushover.net:443')
-        conn.request('POST', '/1/messages.json',
-                     urllib.parse.urlencode({
-                         'token': token,
-                         'user': user,
-                         'message': msg,
-                     }), {'Content-type': 'application/x-www-form-urlencoded'})
-        conn.getresponse()
+        # determine which type of notifications should be sent
+        if pushover:
+            pushoverRequest(token=argsL.pushover['token'],
+                            user=argsL.pushover['user'],
+                            message=msg)
+
+        if email:
+            subject = ('{0} not responding' .format(hostname))
+            sendMailPlain(mailSender=argsL.email['sender'],
+                          mailPassword=argsL.email['password'],
+                          receiver=[argsL.email['receiver']], message=msg,
+                          smtpServer=argsL.email['smtpServer'],
+                          port=argsL.email['smtpPort'], subject=subject)
+
         if timestamp:
-            print('%s Failed to ping %s' % (
+            print('{0} Failed to ping {1}'.format(
                 datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S") + ' -',
                 hostname))
         else:
-            print('Failed to ping %s' % hostname)
+            print('Failed to ping {0}'.format(hostname))
     else:
         if timestamp:
-            print('%s Successful ping response %s' %
-                  (datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S") + ' -',
-                   hostname))
+            print('{0} Successful ping response {1}'.format(
+                datetime.now(timezone).strftime("%Y-%m-%d %H:%M:%S") + ' -',
+                hostname))
         else:
-            print('Successful ping response %s' % hostname)
+            print('Successful ping response {0}'.format(hostname))
 
 
 if __name__ == '__main__':

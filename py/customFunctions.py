@@ -27,9 +27,6 @@ def insertIntoTable(record, user, password, host, db, table, cols):
         # insert statement for each item in df
         cnx.execute(insert_stmt, record)
 
-        # print update to console
-        # print(str(i + 1) + ' records written')
-
         # commit changes in the database
         conn.commit()
 
@@ -56,9 +53,6 @@ def logCleaning(file, replaceChar=' ', colIndex=None, colNames=None):
         # if passes, then open file
         with open(file) as fp:
             lines = [line.rstrip() for line in fp]
-
-        # replace new line string
-        # lines = [sub.replace('\n', '') for sub in lines]
 
         # convert lines to df
         df = pd.DataFrame(lines)
@@ -197,3 +191,24 @@ def ping(hostname: str, useWget: bool = False, verbose: bool = False):
     else:
         # Send one packet and wait up to 10 seconds for a response
         return os.system('ping -c 1 -W 10 ' + hostname + ' > /dev/null 2>&1')
+
+
+def setupLoop(questionText, options: list = None):
+    if options is None:
+        options = ['[Y]es/[N]o']
+
+    options = '/'.join(options)
+
+    questionText = (questionText + ' ' + options + ' ')
+
+    while True:
+        setup_select = input(questionText)
+        if 1 <= len(setup_select) < 4:
+            if setup_select[0].upper() in ['Y', 'N']:
+                # prep selection value for case
+                setup_select = setup_select[0].upper()
+                break
+            print(
+                'Please indicate ' + options + '; received input {0}'.format(
+                    setup_select))
+    return setup_select

@@ -138,9 +138,10 @@ def main():
             subject = ('{0} not responding' .format(hostname))
             sendMailPlain(mailSender=argsL.email['sender'],
                           mailPassword=argsL.email['password'],
-                          receiver=[argsL.email['receiver']], message=msg,
+                          receiver=argsL.email['receiver'].split(','),
+                          message=msg,
                           smtpServer=argsL.email['smtpServer'],
-                          port=argsL.email['smtpPort'], subject=subject)
+                          port=int(argsL.email['smtpPort']), subject=subject)
 
         if timestamp:
             print('{0} Failed to ping {1}'.format(

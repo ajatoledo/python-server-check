@@ -1,70 +1,173 @@
 #!/usr/bin/env python
 
 import json
-import requests
 import pytz
 import os
+from customFunctions import setupLoop, sendMailPlain, pushoverRequest
 
 
 def main():
-    while True:
-        setup_select = input('Will you be setting up a mysql connection? Y/N ')
-        if 1 <= len(setup_select) < 4:
-            if setup_select[0].upper() in ['Y', 'N']:
-                # prep selection value for case
-                setup_select = setup_select[0].upper()
-                break
-            print(
-                'Please indicate Y/N; received input {0}'.format(setup_select))
+    # determining which config items will be setup
 
-    # pushover setup
-    token = input('Enter pushover application api token: ')
-    user = input('Enter pushover user key: ')
-    pushover = {'token': token, 'user': user}
+    # timezone
+    timeZoneSetup = setupLoop(
+        questionText='Do you want to specify a timezone for local '
+                     'reporting? By default UTC will be used.')
 
-    testPO = input('Would you like to test pushover? Y/N ')
-    if testPO[0].upper() == 'Y':
-        print('Running pushover test...')
-        test = pushover.copy()
-        test.update({'message': 'Woo-hoo! Pushover setup was successful!'})
+    if timeZoneSetup == 'Y':
 
-        out = requests.post('https://api.pushover.net/1/messages.json',
-                            data=test,
-                            headers={'User-Agent': 'Python'})
+        # timestamp setup
+        timezone = input('Enter timezone (TZ code) to be used; '
+                         'if blank, UTC will be used: ')
 
-        if out.status_code != 200:
-            print('')
-            raise Exception(
-                'Pushover response status was: {0}, indicating the pushover '
-                'request was not successful; exiting setup now. '
-                '\nReview pushover settings and restart setup process.'.format(
-                    out.status_code))
+        # if blank, set to utc
+        if timezone is '':
+            timezone = 'UTC'
+
+        # validate input tz code
+        if timezone in pytz.all_timezones:
+            pass
+        else:
+            raise ValueError(
+                'Invalid timezone string. Review timezone string settings and '
+                'restart setup process.')
+
+        # compile timezone to dict
+        timestamp = {'timezone': timezone}
+
+    elif timeZoneSetup == 'N':
+        print('Timezone not set, as a result timestamps cannot be used; if '
+              'you would like to setup a timezone, re-run configSetup.py.')
+
+        timestamp = None
+
+    # email
+    emailSetup = setupLoop(
+        questionText='Will you be setting up an e-mail account?')
+
+    if emailSetup == 'Y':
+        sender = input('Enter email account that will be '
+                       'used to send messages: ')
+        password = input('Enter email account password; '
+                         'note stored in plaintext: ')
+        receiver = input('Enter email address(es) that should be notified; \n'
+                         'enter multiple addresses as comma-delimited, '
+                         'e.g. p1@example.com, p2@example.com: ')
+
+        # remove space if needed
+        receiver = receiver.replace(' ', '')
+
+        # the following items can be left blank for default
+        smtpServer = input('Enter smtpserver address; '
+                           'if blank smtp.gmail.com will be used: ')
+
+        # fill in blank response
+        if smtpServer == '':
+            smtpServer = 'smtp.gmail.com'
+
+        port = input('Enter email server port; if blank, 465 will be used: ')
+
+        # fill in blank response
+        if port == '':
+            port = 465
+
+        # compile email items into a dict
+        email = {'sender': sender, 'password': password, 'receiver': receiver,
+                 'smtpServer': smtpServer, 'port': port}
+
+        # ask user if they would like to test email
+        testEmail = setupLoop(questionText='Would you like to test email '
+                                           'using provided arguments?')
+
+        if testEmail == 'Y':
+            print('Running email test...')
+            test = email.copy()
+            test.update({'message': 'Woo-hoo! Email setup was successful!'})
+
+            # send test email message
+            sendMailPlain(mailSender=test['sender'],
+                          mailPassword=test['password'],
+                          receiver=[test['receiver']], message=test['message'],
+                          smtpServer=test['smtpServer'], port=int(test['port']),
+                          subject=test['subject'], verbose=True)
+
         else:
             print(
-                'Pushover returned OK status, check your device for a pushover '
-                'notification; if you don\'t see a notification, '
-                'check the pushover application settings and '
-                're-run setup if needed..')
+                'Email test was not conducted; if you answered N by accident, '
+                're-run the setup process. Otherwise, please be sure '
+                'that your email information is setup properly.')
 
-    else:
-        print('Pushover test was not conducted; if you answered N by accident, '
-              're-run the setup process. Otherwise, please be sure '
-              'that your pushover application is setup properly.')
+    elif emailSetup == 'N':
+        print('Email not set, as a result email notifications cannot be used; '
+              'if you would like to setup email, re-run configSetup.py.')
+        email = None
 
-    # timestamp setup
-    timezone = input('Enter timezone to be used; use TZ code: ')
-    timestamp = {'timezone': timezone}
+    # pushover
+    pushoverSetup = setupLoop(
+        questionText='Will you be setting up a pushover account?')
 
-    if timezone in pytz.all_timezones:
-        pass
-    else:
-        raise ValueError(
-            'Invalid timezone string. Review timezone string settings and '
-            'restart setup process.')
+    if pushoverSetup == 'Y':
+
+        # pushover setup
+        token = input('Enter pushover application api token: ')
+        user = input('Enter pushover user or group key: ')
+
+        # ask user if they want to additional pushover arguments in notification
+        pushoverAdvanced = setupLoop(questionText='Would you like to enter '
+                                                  'additional pushover '
+                                                  'arguments, e.g., '
+                                                  'notification title, '
+                                                  'link, etc.? ')
+
+        if pushoverAdvanced == 'Y':
+            attachment = input('Enter pushover application attachment: ')
+            device = input('Enter device name: ')
+            title = input('Enter pushover application attachment: ')
+            url = input('Enter url: ')
+            url_title = input('Enter url_title: ')
+            priority = input('Enter notification priority: ')
+            sound = input('Enter pushover sound to use in notification: ')
+
+            # compile pushover with additional arguments to dict
+            pushover = {'token': token, 'user': user, 'attachment': attachment,
+                        'device': device, 'title': title, 'url': url,
+                        'url_title': url_title, 'priority': priority,
+                        'sound': sound}
+
+        if pushoverAdvanced == 'N':
+            # compile pushover items without additional arguments to dict
+            pushover = {'token': token, 'user': user}
+
+        testPO = setupLoop(questionText='Would you like to test pushover?')
+
+        if testPO == 'Y':
+            print('Running pushover test...')
+            test = pushover.copy()
+            test.update({'message': 'Woo-hoo! Pushover setup was successful!'})
+
+            out = pushoverRequest(token=test['token'],
+                                  user=test['user'],
+                                  message=test['message'], verbose=True)
+
+        else:
+            print('Pushover test was not conducted; if you answered N by '
+                  'accident, re-run the setup process. Otherwise, please '
+                  'be sure that your pushover application is setup properly.')
 
     # if user select to input mysql connection information, prompt them to
     # input information and then create config
-    if setup_select == 'Y':
+
+    elif pushoverSetup == 'N':
+        print('Pushover not set, as a result pushover notifications cannot '
+              'be used; if you would like to setup pushover, '
+              're-run configSetup.py.')
+
+        pushover = None
+
+    mysqlSetup = setupLoop(
+        questionText='Will you be setting up a mysql connection?')
+
+    if mysqlSetup == 'Y':
 
         # "mysql":
         user = input('Enter mysql username: ')
@@ -75,23 +178,46 @@ def main():
         columns = input(
             'Enter columns that will be updated in specified table; delimit '
             'column names with commas: ')
+
+        # compile mysql items to dict
         mysql = {'user': user, 'password': password, 'host': host,
                  'database': database,
                  'table': table, 'columns': columns}
 
-        # create config json
-        config = {'pushover': pushover, 'timestamp': timestamp, 'mysql': mysql}
-
     # if user selected to not include mysql, create config
-    elif setup_select == 'N':
-        config = {'pushover': pushover, 'timestamp': timestamp}
+    elif mysqlSetup == 'N':
+        mysql = None
 
-    # create file path to write file in current directory
-    loc = os.path.dirname(os.path.realpath(__file__)) + '/config.json'
+    # create config json
+    config = {'timestamp': timestamp, 'email': email, 'pushover': pushover,
+              'mysql': mysql}
 
-    # write config file to disk
-    with open(loc, 'w') as f:
-        json.dump(config, f)
+    # keep only the items for which information was provided
+    config = {k: v for k, v in config.items() if v is not None}
+
+    # print config for confirmation:
+    configPreview = setupLoop(
+        questionText='Preview the config file to be created?')
+
+    if configPreview == 'Y':
+        print(json.dumps(config, indent=2))
+
+    # print config for confirmation:
+    writeConfig = setupLoop(
+        questionText='Should the config file be written to file?')
+
+    if writeConfig == 'Y':
+
+        # create file path to write file in current directory
+        loc = os.path.dirname(os.path.realpath(__file__)) + '/config.json'
+
+        # write config file to disk
+        with open(loc, 'w') as f:
+            json.dump(config, f)
+
+    # raise an issue if config is not saved
+    elif writeConfig == 'N':
+        raise Exception('Config file not written to file')
 
 
 if __name__ == '__main__':

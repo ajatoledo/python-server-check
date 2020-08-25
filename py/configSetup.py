@@ -36,10 +36,14 @@ def main():
         timestamp = {'timezone': timezone}
 
     elif timeZoneSetup == 'N':
-        print('Timezone not set, as a result timestamps cannot be used; if '
+        print('Timezone not set, as a result timestamps will use UTC; if '
               'you would like to setup a timezone, re-run configSetup.py.')
 
-        timestamp = None
+        # set timezone to UTC
+        timezone = 'UTC'
+
+        # save timestamp to specified timezone
+        timestamp = {'timezone': timezone}
 
     # email
     emailSetup = setupLoop(
@@ -217,7 +221,7 @@ def main():
 
     # raise an issue if config is not saved
     elif writeConfig == 'N':
-        raise Exception('Config file not written to file')
+        raise Exception('Config file not written to file.')
 
 
 if __name__ == '__main__':
